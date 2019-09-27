@@ -7,7 +7,6 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
 import org.json.JSONArray
@@ -17,7 +16,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
 
     private var numDogs: Int = 0
-    private lateinit var listView : RecyclerView
+    private lateinit var listView: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var workManager: WorkManager
     private lateinit var dogsAdapter: DogsAdapter
@@ -50,7 +49,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getAllDogs() {
-        val  url = "https://api.thedogapi.com/v1/images/search?size=small&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=8"
+        val url =
+            "https://api.thedogapi.com/v1/images/search?size=small&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=8"
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
