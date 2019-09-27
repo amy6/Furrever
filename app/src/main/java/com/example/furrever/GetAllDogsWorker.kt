@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.example.furrever.MainActivity.Companion.ALL_DOGS_API_URL
 import com.example.furrever.MainActivity.Companion.RANDOM_DOG_API_URL
 import java.net.URL
@@ -20,7 +21,9 @@ class GetAllDogsWorker(context: Context, workerParams: WorkerParameters) : Worke
         val response = URL(apiUrl).readText()
         Log.d("DOG", "Response : $response")
 
-        return Result.success()
+        val output = workDataOf("RESPONSE" to response)
+
+        return Result.success(output)
     }
 
 }

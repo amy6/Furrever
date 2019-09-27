@@ -2,27 +2,55 @@ package com.example.furrever
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
+    private var numDogs: Int = 0
+    private lateinit var listView : RecyclerView
+    private lateinit var progressBar: ProgressBar
     private lateinit var workManager: WorkManager
+    private lateinit var dogsAdapter: DogsAdapter
+    private var dogsList = ArrayList<Dog>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        listView = findViewById(R.id.recyclerView)
+        setUpRecyclerView()
+        progressBar = findViewById(R.id.progressBar)
+
         workManager = WorkManager.getInstance(this)
+
+        dogsAdapter = DogsAdapter(dogsList, this)
+        listView.adapter = dogsAdapter
+
+        progressBar.visibility = View.VISIBLE
+        listView.visibility = View.GONE
 
         getAllDogs()
 //        getRandomDog()
     }
 
+    private fun setUpRecyclerView() {
+        listView.layoutManager = GridLayoutManager(this, 2)
+        listView.setHasFixedSize(true)
+        listView.setItemViewCacheSize(10)
+    }
+
     private fun getAllDogs() {
-        val  url = "https://dog.ceo/api/breed/hound/images"
+        val  url = "https://api.thedogapi.com/v1/images/search?size=small&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=8"
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -35,16 +63,36 @@ class MainActivity : AppCompatActivity() {
                 .addTag("GetAllDogsWorker")
                 .build()
 
-        Log.d("DOG", "Enqueuing get all dogoos worker")
+        Log.d("DOG", "Enqueuing get all doggos worker")
         workManager.enqueue(getAllDogsWorkRequest)
 
         workManager.getWorkInfoByIdLiveData(getAllDogsWorkRequest.id)
-            .observe(this, Observer {
+            .observe(this, Observer { workInfo ->
                 Log.d("DOG", "Observing all doggos worker")
-                if (it != null) {
+                if (workInfo != null) {
                     Log.d("DOG", "Get all doggos worker completed successfully")
+                    val jsonResponse = workInfo.outputData.getString("RESPONSE")
+                    if (jsonResponse != null) {
+                        Log.d("DOG", "Response : $jsonResponse")
+                        parseResponse(jsonResponse)
+                        progressBar.visibility = View.GONE
+                        listView.visibility = View.VISIBLE
+                    }
                 }
             })
+    }
+
+    private fun parseResponse(jsonResponse: String) {
+        val jsonArray = JSONArray(jsonResponse)
+        for (i in 0 until jsonArray.length()) {
+            val dogJsonObject = jsonArray[i] as JSONObject
+            val id = dogJsonObject.getString("id")
+            val imgUrl = dogJsonObject.getString("url")
+            val dog = Dog(imgUrl)
+            dogsList.add(dog)
+            Log.d("DOG", "Img Url for dog with ID $id is $imgUrl")
+        }
+        dogsAdapter.setDogs(dogsList)
     }
 
     private fun getRandomDog() {
